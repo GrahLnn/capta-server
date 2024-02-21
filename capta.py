@@ -6,7 +6,8 @@ import cv2
 import numpy as np
 from io import BytesIO
 from flask import Flask, request, jsonify
-
+import io
+import base64
 
 app = Flask(__name__)
 
@@ -34,6 +35,7 @@ def open_image(file):
 
 
 def detection(image):
+    # image = open_image(image)
     CLASSES = sorted(["char", "target"])
     print("classes:", CLASSES)
 
@@ -46,10 +48,11 @@ def detection(image):
     best_model = models.get(
         MODEL_ARCH,
         num_classes=len(CLASSES),
-        checkpoint_path="./modal/average_model.pth",
+        checkpoint_path="average_model.pth",
     ).to(DEVICE)
 
     image_array = np.asarray(bytearray(image), dtype=np.uint8)
+    # image_array = np.array(image)
 
     # 使用 OpenCV 从 numpy 数组中解码图片
     image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
@@ -153,17 +156,25 @@ def detection(image):
 # cv2.imwrite(output_image_path, cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
 
 # image_path = "./captcha.png"
-# detection(image_path)
+# res = detection(image_path)
+# print(res)
 
 
 @app.route("/detect", methods=["POST"])
 def detect():
     try:
         data = request.json
-        image_path = data["image_path"]
-        result = detection(image_path)
+        image_base64 = data["image_base64"]
+        image_byte = base64.b64decode(image_base64)
+        image = Image.open(io.BytesIO(image_byte))
+        with io.BytesIO() as output:
+            image.save(output, format="PNG")
+            image_png_byte = output.getvalue()
+
+        result = detection(image_png_byte)
         return jsonify(result)
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)})
 
 
