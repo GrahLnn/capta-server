@@ -11,9 +11,7 @@ import base64
 
 app = Flask(__name__)
 
-# rf = Roboflow(api_key="AdwMbQISBDo540lfKcP1")
-# project = rf.workspace("lingusic").project("capta")
-# dataset = project.version(1).download("yolov5")
+
 
 
 # LOCATION = dataset.location
